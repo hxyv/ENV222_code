@@ -1,0 +1,179 @@
+---
+title: "W4 Exercise - Characters"
+author: "Xingyu.Hu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: hpstr
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(dplyr)
+library(tidyr)
+library(DescTools)
+
+setwd("D:/Documents/RProj/ENV222_codes")
+student_names <- read.csv("data/student_names.csv")
+```
+
+
+
+1. Here is a sentence in German:
+
+```{r}
+x <- 'Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich'
+```
+
+
+a. How many characters are there in the sentence, excluding the blank spaces?
+
+```{r}
+num <- gsub(" ", "", x) %>%
+   nchar() %>% 
+    print()
+```
+
+b. Do these characters cover all the German letters?
+
+```{r}
+german_letters <- letters %>% 
+    append(c("ä", "ö", "ü", "ß")) %>% 
+    print()
+
+strsingle <- tolower(x) %>%
+    gsub(" ", "", .) %>%
+    strsplit("") %>%
+    print()
+
+check_german <- function(input_str){
+    for (i in 1:length(german_letters)) {
+        if (grepl(german_letters[i], input_str) == FALSE){
+            return("Input string does not contain all German letters!")
+        }
+    }
+    return("Input string contains all German letters!")
+}
+
+check_german(strsingle)
+```
+
+c. Which character is repeated the most times?
+
+```{r}
+word_freq <- table(strsingle) %>% 
+    data.frame() %>%
+    arrange(desc(Freq))
+
+head(word_freq, 10)
+```
+
+d. Which is the longest word in the sentence?
+
+```{r}
+strword <- strsplit(x, " ") %>% 
+    data.frame()
+names(strword) <- "word"
+
+strword$word[which.max(nchar(strword$word))]
+```
+
+e. Give a new sentence with the number replaced with Arabic number (zwölf -> 12).
+
+```{r}
+print(gsub("zwölf", "12", x))
+```
+
+---
+
+2. Process the *student_name* dataset.
+
+a. Whose name is the shortest?
+
+```{r}
+student_names$Name[which.min(nchar(student_names$Name))]
+```
+
+b. Add a new column as the family name. How many family names do we have? Which family name is repeated the most times?
+
+```{r}
+student_names$FamilyName <- student_names$Name %>%
+    strsplit(" ") %>%
+    sapply(tail, 1)
+
+head(student_names, 5)
+tail(student_names, 5)
+```
+
+c. Add a new column with the family name followed by the given name.
+
+```{r}
+names <- student_names %>%
+    separate(col = Name,
+            into = c("GivenName", "FamilyName"),
+            sep = " ")
+
+student_names$NewName <- paste(names$FamilyName, names$GivenName)
+
+head(student_names, 5)
+tail(student_names, 5)
+```
+
+d. Order the data frame by the family name.
+
+```{r}
+student_names <- student_names[order(student_names$FamilyName),]
+
+head(student_names, 10)
+tail(student_names, 10)
+```
+
+---
+
+3. Text could be encrypted in a simple rule like this: C $\rightarrow$ D, A $\rightarrow$ B, K $\rightarrow$ L, E $\rightarrow$ F: CAKE $\rightarrow$ DBLF(+1); D $\rightarrow$ G, A $\rightarrow$ E, K $\rightarrow$ O, E $\rightarrow$ I: CAKE $\rightarrow$ GEOI(+4). Decrypt the following sentence which was encrypted with the rule above:
+
+    > skt grcgey xkskshkx rubk hkigayk ul xusgtik utre
+    
+```{r}
+encrypteIt <- function(input, move = 1){
+    if(move > 25 | move < -25){
+        return("Please set the move between -25 and 25")
+    }
+
+
+    asciiSingle <- strsplit(input, "") %>%
+        data.frame() %>%
+        apply(2, DescTools::CharToAsc)
+
+    for(i in 1:length(asciiSingle)){
+        if(asciiSingle[i] == 32){
+            next
+        }
+
+        if(asciiSingle[i] + move > 122){
+            asciiSingle[i] <- asciiSingle[i] + move - 26
+            next
+        }
+
+        if(asciiSingle[i] + move < 97){
+            asciiSingle[i] <- asciiSingle[i] + move + 26
+            next
+        }
+
+    asciiSingle[i] <- asciiSingle[i] + move
+    }
+
+    output <- paste(apply(asciiSingle, 2, DescTools::AscToChar))
+    return(output)
+}
+
+text <- "skt grcgey xkskshkx rubk hkigayk ul xusgtik utre"
+for(i in 1:25){
+    print(paste0(encrypteIt(text, i), " (+", i, ")"))
+}
+```
+    
+

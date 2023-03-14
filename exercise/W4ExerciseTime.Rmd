@@ -1,0 +1,193 @@
+---
+title: "W4 Exercise - Time"
+author: "Xingyu.Hu"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: hpstr
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(lubridate)
+library(tidyverse)
+library(ggthemes)
+library(latex2exp)
+library(patchwork)
+
+dtf <- airquality
+```
+
+
+1. **Today**
+
+a. Which day of the year is it?
+
+```{r}
+Sys.Date()
+```
+
+b. Convert it as "Year, Month in English and Date, Weekday in English", such as "2023, January 1, Sunday".
+
+```{r}
+Sys.setlocale("LC_TIME", "English")
+now <- Sys.Date()
+format(now, format="%Y, %B, %d, %A")
+```
+
+c. Suppose we get to know each other at 15:00, September 13, 2022. How many days have we known each other until now? How many hours? How many seconds?
+
+```{r}
+tp1 <- strptime("2022-09-13 15:00", 
+                format = "%Y-%m-%d %H:%M",
+                tz = "Asia/Shanghai")
+
+tp2 <- Sys.time()
+
+difftime(time1 = tp2, time2 = tp1, units = "days")
+difftime(time1 = tp2, time2 = tp1, units = "hours")
+difftime(time1 = tp2, time2 = tp1, units = "secs")
+```
+
+d. The anniversary is September 13, 2023. What day is it? How about in 2024? Plot a graph for September 13 of each year, with the weekday as x and the year as y.
+
+```{r}
+anniversiary <- strptime("September 13, 2023",
+                         format = "%B %d, %Y",
+                         tz = "Asia/Shanghai")
+format(anniversiary, format = "%A")
+```
+
+---
+
+2. **The *airquality* dataset**
+
+a. Create a new column "Date", showing the date in the format of "Year-month-day", such as "2023-01-31".
+
+```{r}
+dtf$Date <- paste("1973", dtf$Month, dtf$Day) %>%
+    strptime(format = "%Y %m %d", tz = "EST") %>%
+    format("%Y-%m-%d")
+
+head(dtf, 6)
+```
+
+b. Plot a graph for each atmospheric variable (i.e. ozone in ppb, solar radiation in $W\cdot m^{-2}$, wind speed in $m\cdot m^{-1}$, air temperature in $^\circ C$) against the date.
+
+```{r}
+dtf5 <- dtf %>%
+    subset(Date < "1973-06-01")
+
+ggplot(dtf5) +
+    geom_point(aes(x = Date, y = Ozone))+
+    labs(y = "Ozone (ppb)") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+ggplot(dtf5) +
+    geom_point(aes(x = Date, y = Solar.R))+
+    labs(y = TeX("$\\text{Solar Radiation } (W\\cdot m^{-2})$")) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(dtf5) +
+    geom_point(aes(x = Date, y = Wind))+
+    labs(y = TeX("$\\text{Wind speed }m\\cdot m^{-1}$")) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(dtf5) +
+    geom_point(aes(x = Date, y = Temp))+
+    labs(y = TeX("$\\text{Temperature }\\circ C$")) +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+c. Create a new column "Weekday", showing the day in the week (1 as Monday and 7 as Sunday).
+
+```{r}
+dtf$Weekday <- dtf$Date %>%
+    wday(week_start = 1)
+
+head(dtf, 5)
+```
+
+d. Calculate the mean values of each atmospheric variable for each weekday.
+
+```{r}
+mean_dtf <- dtf %>%
+    drop_na() %>%
+    group_by(Weekday) %>%
+    summarise(Ozone = mean(Ozone),
+            Solar.R = mean(Solar.R),
+            Wind = mean(Wind),
+            Temp = mean(Temp))
+```
+
+e. Plot a graph for each atmospheric variable with the mean values against the weekdays.
+
+```{r}
+mean_ozone <- ggplot(mean_dtf) +
+    geom_line(aes(x = Weekday, y = Ozone)) +
+    labs(y = "Ozone (ppb)") +
+    theme_classic()
+
+mean_solar <- ggplot(mean_dtf) +
+    geom_line(aes(x = Weekday, y = Solar.R)) +
+    labs(y = TeX("$\\text{Solar Radiation } (W\\cdot m^{-2})$")) +
+    theme_classic()
+
+mean_wind <- ggplot(mean_dtf) +
+    geom_line(aes(x = Weekday, y = Wind))+
+    labs(y = TeX("$\\text{Wind speed }m\\cdot m^{-1}$")) +
+    theme_classic()
+
+mean_temp <- ggplot(mean_dtf) +
+    geom_line(aes(x = Weekday, y = Temp))+
+    labs(y = TeX("$\\text{Temperature }\\circ C$")) +
+    theme_classic()
+
+(mean_ozone + mean_solar) / (mean_wind + mean_temp)
+```
+
+---
+
+3. The Smart Flux data set The smartflux.zip data set was obtained from the flux observation at the Outdoor Research and Teaching Station (ORTS), XJTLU. It was supposed to be an automatic continuous measurement at a half-hourly base, saved in daily files. However, there were missing data in the records for some reason. How many data files are missing? How many records are missing?
+
+```{r warning=FALSE}
+setwd("data/smartflux/")
+temp <- list.files() %>% 
+    substr(start = 1, stop =10) %>%
+    strptime(format = "%Y-%m-%d") %>%
+    format("%Y-%m-%d")
+
+missing_files <- 0
+for(i in 1:(length(temp)-1)){
+    diff <- as.vector(difftime(temp[i+1], temp[i], units = "days"))
+    if(diff != 1){
+        missing_files <- missing_files + diff -1
+    }
+}
+print(missing_files)
+```
+```{r warning=FALSE}
+setwd("data/smartflux/")
+temp <- list.files()
+files <- lapply(temp, function(i){
+    read.table(i, fill = TRUE)
+})
+
+missing_records <- 0
+for(i in 1:length(files)){
+    records <- length(files[[i]][3:nrow(files[[i]]),4])
+    missing_records <- missing_records + 48 - records
+    
+}
+
+missing_records <- missing_records + 48 * missing_files
+print(missing_records)
+```
