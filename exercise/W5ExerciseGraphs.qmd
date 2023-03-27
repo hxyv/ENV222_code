@@ -1,0 +1,122 @@
+---
+title: "W5 Exercise - Graphs"
+author: "Xingyu Hu"
+highlight-style: pygments
+format: 
+    html:
+        code-fold: true
+        theme: pulse
+crossref: 
+    fig-title: '**Figure**'
+    fig-labels: arabic
+    title-delim: "**.**"
+---
+
+---
+
+::: columns
+::: {.column width="50%"}
+
+1.  How can you improve the following graph?
+
+![](../graph/w5map.png){#fig:1 fig-align="center" width="100%"}
+
+:::
+::: {.column width="50%"}
+
+- Enlarge scale bar font size;
+- Discard background map;
+
+:::
+:::
+
+---
+
+2.  Criticize the following graphs:
+
+    a.  [Mykland et al. (1995)](https://www.jstor.org/stable/2291148) Regeneration in Markov chain samplers. Journal of the American Statistical Association 90:233-241, Figure 1
+
+    ![](../graph/Mykland1995.png){fig-align="center" width="50%"}
+
+    - No labels or ticks for x and y-axis;
+
+
+    b. [Hummer et al. (2001)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC115017/) Role for p53 in gene induction by double-stranded RNA. J Virol 75:7774-7777, Figure 4
+    
+    ![](../graph/Hummer2001.png){fig-align="center" width="50%"}
+    
+    - No minus error bar;
+    - y axis should have `%` sign;
+    
+    c. [Cawley et al. (2004)](https://www.sciencedirect.com/science/article/pii/S0092867404001278?via%3Dihub) Unbiased mapping of transcription factor binding sites along human chromosomes 21 and 22 points to widespread regulation of noncoding RNAs. Cell 116:499-509, Figure 1
+    
+    ![](../graph/Cawley2004.png){fig-align="center" width="70%"}
+
+    - No 3D pie chart;
+
+    d. [Jorgenson et al. (2005)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1196373/) Ethnicity and human genetic linkage maps. American Journal of Human Genetics 76:276-290, Figure 2
+    
+    ![](../graph/Jorgenson2005.png){fig-align="center" width="70%"}
+    
+    - Background color is not suitable;
+    - Axis ticks font size is too small
+    
+---
+
+3. In an aerosol particle size distribution figure, the x-axis label is $D_p(\mu m)$, and the y-axis label is $\frac{\mathrm{d}N}{\mathrm{d}\log D_p}(\mathrm{cm}^{-3})$:
+
+![](../graph/particle_size_dist.png){fig-align="center" width="50%"}
+
+Write the R code for inserting the axis labels into a graph.
+
+```{r}
+#| label: fig-aerosol_particle
+#| fig-cap: "Aerosol particle size distribution"
+
+library(ggplot2)
+library(latex2exp)
+
+ggplot() +
+    geom_blank() +
+    theme_bw() +
+    labs(y = TeX(r"($\frac{dN}{d\log D_p}$ $(cm^{-3})$)"),
+         x = TeX(r"($D_p$ $(\mu m)$)")) 
+```
+
+---
+
+4. How do you generate the following layout for `plot(co2)`?
+
+![](../graph/plotco2.png){fig-align="center" width="50%"}
+
+
+```{r}
+#| warning: false
+
+par(fig=c(0,0.27,0.3,1), new=TRUE)
+plot(co2)
+par(fig=c(0.3, 1, 0.5, 1),new=TRUE)
+plot(co2)
+par(fig=c(0,0.55,0,0.5), new=TRUE)
+plot(co2)
+par(fig=c(0.5,1,0,0.71),new=TRUE)
+plot(co2)
+mtext("", side=4, outer=TRUE, line=-4)
+```
+
+---
+
+5. Insert the graph you created in Exercise 3 into a R markdown document. Give proper numbering and a caption. Cross-refer it in the statement.
+
+Here is the figure @fig-aerosol_particle.
+
+
+
+
+
+
+
+
+
+
+

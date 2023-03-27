@@ -27,7 +27,8 @@ dtf <- airquality
 a. Which day of the year is it?
 
 ```{r}
-Sys.Date()
+Sys.Date() %>%
+    format("%j")
 ```
 
 b. Convert it as "Year, Month in English and Date, Weekday in English", such as "2023, January 1, Sunday".
@@ -185,7 +186,6 @@ missing_records <- 0
 for(i in 1:length(files)){
     records <- length(files[[i]][3:nrow(files[[i]]),4])
     missing_records <- missing_records + 48 - records
-    
 }
 
 missing_records <- missing_records + 48 * missing_files

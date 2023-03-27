@@ -106,6 +106,12 @@ student_names$FamilyName <- student_names$Name %>%
 
 head(student_names, 5)
 tail(student_names, 5)
+
+name_freq <- table(student_names$FamilyName) %>% 
+    data.frame() %>%
+    arrange(desc(Freq))
+
+head(name_freq, 10)
 ```
 
 c. Add a new column with the family name followed by the given name.
