@@ -2,6 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-.html
+*.html
 quiz1.R
 quiz1.Rmd
