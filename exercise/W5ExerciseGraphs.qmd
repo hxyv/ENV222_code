@@ -6,6 +6,7 @@ format:
     html:
         code-fold: true
         theme: pulse
+        embed-resources: true
 crossref: 
     fig-title: '**Figure**'
     fig-labels: arabic
