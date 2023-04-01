@@ -1,0 +1,187 @@
+---
+title: "W7 Exercise --- Post-hoc test"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: sketchy
+        embed-resources: true
+        code-block-bg: true
+        code-block-border-left: "black"
+        comments: 
+            hypothesis: true
+        toc: true
+---
+
+# `iris` dataset
+
+The iris dataset. Are the mean sepal lengths equal among the three species? If not, which species has a different mean sepal length from others? Carry out ANOCA, the LSD test, and the Bonferroni t-test, at $\alpha=0.05$. What is your conclusion?
+
+## LSD
+
+**Step by step:**
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidyr)
+library(dplyr)
+
+dtf <- iris |> 
+    select(Sepal.Length, Species)
+
+n <- nrow(dtf) |> print()
+k <- nlevels(dtf$Species) |> print()
+dfree <- (n - k) |> print()
+t_critical <- qt(0.05/2, df = dfree, lower.tail = FALSE) |> print()
+
+stats <- dtf |> 
+    group_by(Species) |> 
+    summarise(group_n = length(Sepal.Length),
+              group_SD = sd(Sepal.Length),
+              geoup_mean = mean(Sepal.Length)) |> print()
+sp2 <- (sum((stats$group_n - 1) * stats$group_SD ^ 2) / dfree) |> print()
+LSD <- (t_critical * sqrt(sp2 * sum(1 / stats$group_n))) |> print()
+paired_groupmean <- combn(stats$geoup_mean, 2) |> print()
+abs(paired_groupmean[2, ] - paired_groupmean[1, ])
+```
+
+**One step:**
+
+```{r}
+#| warning: false
+
+library(agricolae)
+iris_lsd <- aov(Sepal.Length ~ Species, data = dtf) |> 
+    LSD.test("Species", p.adj = "bonferroni") |> print()
+```
+
+**Conclusion:** At $\alpha=0.05$, setosa, versicolor and virginica's mean sepal length are significantly different from each other.
+
+## Bonferroni
+
+**Step by step:**
+
+```{r}
+m <- choose(nlevels(dtf$Species), 2) |> print()
+alpha_cor <- (0.05 / m) |> print()
+
+t.test(Sepal.Length ~ Species, 
+       dtf, 
+       subset = Species %in% c("setosa", "versicolor"), 
+       conf.level = 1 - alpha_cor) |> print()
+
+t.test(Sepal.Length ~ Species, 
+       dtf, 
+       subset = Species %in% c("setosa", "virginica"), 
+       conf.level = 1 - alpha_cor) |> print()
+
+t.test(Sepal.Length ~ Species, 
+       dtf, 
+       subset = Species %in% c("versicolor", "virginica"), 
+       conf.level = 1 - alpha_cor) |> print()
+```
+
+**One step:**
+
+```{r}
+species_pt <- pairwise.t.test(dtf$Sepal.Length, 
+                              dtf$Species, 
+                              pool.sd = FALSE, 
+                              var.equal = TRUE, 
+                              p.adj = "bonf") |> print()
+
+species_pt$p.value < 0.05
+```
+
+**Conclusion:** the same as the LSD test.
+
+---
+
+# HTC
+
+Water from three sources in Suzhou-Dushu Lake, Jinji Lake and control - were fed to Sprague-Dawley rats and the level of packed red blood cells after centrifugation (called the "hematocrit", HTC) was measured after 48 hours. You wonder if the hematocrit measurements are the same for all water sources and which water source, if any, has different influence from others. The results (in vol%) were as follows:
+
+- Control: 38, 40, 32, 36, 40, 40, 38, 40, 38, 40, 36, 40, 40, 35, 45
+- Dushu Lake: 56, 60, 50, 50, 50, 35, 40, 40, 55, 35
+- Jinji Lake: 40, 42, 38, 46, 36
+
+Carry out ANOCA, the LSD test, and the Bonferroni t-test, at $\alpha=0.01$. What is your conclusion?
+
+## LSD
+
+**Step by step:**
+
+```{r}
+dtf <- data.frame(
+    HTC = c(38, 40, 32, 36, 40, 40, 38, 40, 38, 40, 36, 40, 40, 
+            35, 45, 56, 60, 50, 50, 50, 35, 40, 40, 55, 35,40, 
+            42, 38, 46, 36), 
+    group = rep(c("control", "dushu", "jinji"), c(15, 10, 5))
+    )
+levels(dtf$group) <- c("control", "dushu", "jinji")
+
+n <- nrow(dtf) |> print()
+k <- nlevels(dtf$group) |> print()
+dfree <- (n - k) |> print()
+t_critical <- qt(0.01/2, df = dfree, lower.tail = FALSE) |> print()
+
+stats <- dtf |> 
+    group_by(group) |> 
+    summarise(group_n = length(HTC),
+              group_sd = sd(HTC),
+              group_mean = mean(HTC)) |> print()
+
+sp2 <- (sum((stats$group_n - 1) * stats$group_sd ^ 2) / dfree) |> print()
+LSD <- (t_critical * sqrt(sp2 * sum(1 / stats$group_n))) |> print()
+paired_groupmean <- combn(stats$group_mean, 2) |> print()
+abs(paired_groupmean[2, ] - paired_groupmean[1, ])
+```
+
+**One step:**
+
+```{r}
+htc_lsd <- aov(HTC ~ group, data = dtf) |> 
+    LSD.test("group", p.adj = "bonferroni", alpha = 0.01) |> print()
+```
+
+**Conclusion:** At $\alpha=0.01$, hematocrit measurements of Dushu Lake's samples are significantly different from that of control's, while hematocrit measurements of Jinji Lake's are not significantly different from the other two groups.
+
+## Bonferroni
+
+**Step by step:**
+
+```{r}
+m <- choose(nlevels(dtf$group), 2) |> print()
+alpha_cor <- (0.01 / m) |> print()
+
+t.test(HTC ~ group,
+       dtf,
+       subset = group %in% c("control", "dushu"),
+       conf.level = 1 - alpha_cor) |> print()
+
+t.test(HTC ~ group,
+       dtf,
+       subset = group %in% c("control", "jinji"),
+       conf.level = 1 - alpha_cor) |> print()
+
+t.test(HTC ~ group,
+       dtf,
+       subset = group %in% c("dushu", "jinji"),
+       conf.level = 1 - alpha_cor) |> print()
+```
+
+**One step:**
+
+```{r}
+group_pt <- pairwise.t.test(dtf$HTC,
+                            dtf$group,
+                            pool.sd = FALSE,
+                            var.equal = TRUE,
+                            p.adj = "bonf") |> print()
+
+group_pt$p.value < 0.01
+```
+
+**Conclusion:** the same as the LSD test.

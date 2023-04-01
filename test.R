@@ -1,30 +1,37 @@
-library(tidyverse)
+dtf <- data.frame(diet1 = c(90, 95, 100),
+                  diet2 = c(120, 125, 130),
+                  diet3 = c(125, 130, 135))
+dtf2 <- stack(dtf)
+names(dtf2) <- c("wg", "diet")
+wg_aov <- aov(wg ~ diet, data = dtf2)
+summary(wg_aov)
 
-table1
-table2
-table3
-table4a
-table4b
-table5
+n <- nrow(dtf2)
+k <- nlevels(dtf2$diet)
+dfree <- n - k
+t_critical <- qt(0.05/2, df = dfree, lower.tail = FALSE)
 
-# Compute rate per 10,000
-table1 %>% 
-    mutate(rate = cases / population * 10000)
+sp2 <- sum((3 - 1) * apply(dtf, 2, sd) ^ 2)/ dfree
+LSD <- t_critical * sqrt(sp2 * (1/3 + 1/3 + 1/3))
 
-# Compute cases per year
-table1 %>% 
-    count(year, wt = cases)
+dtf_groupmean <- colMeans(dtf)
+paired_groupmean <- combn(dtf_groupmean, 2)
+paired_groupmean[2, ] - paired_groupmean[1, ]
 
-tidy4a <- table4a %>% 
-    pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "cases")
-tidy4b <- table4b %>% 
-    pivot_longer(c(`1999`, `2000`), names_to = "year", values_to = "population")
+# better using the long table consistently:
+library(dplyr)
+dtf_sm <- 
+    dtf2 |> 
+    group_by(diet) |> 
+    summarise(n = length(wg),
+              sd = sd(wg),
+              mean = mean(wg))
+sp2 <- sum((dtf_sm$n - 1) * dtf_sm$sd ^ 2 )/ dfree
+LSD <- t_critical * sqrt(sp2 * sum(1 / dtf_sm$n))
+dtf_groupmean <- colMeans(dtf)
+paired_groupmean <- combn(dtf_sm$mean, 2)
+paired_groupmean[2, ] - paired_groupmean[1, ]
 
-left_join(tidy4a, tidy4b)
+library(agricolae)
+LSD.test(wg_aov, "diet", p.adj = "bonferroni") |> print()
 
-wide2 <- table2 %>%
-    pivot_wider(names_from = type, values_from = count)
-
-iris |> 
-    pivot_longer(-Species) |> 
-    print()

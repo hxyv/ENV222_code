@@ -4,18 +4,17 @@ author: "Xingyu Hu"
 date: "`r Sys.Date()`"
 format: 
     html:
-        code-fold: true
         theme: sketchy
         embed-resources: true
         code-block-bg: true
         code-block-border-left: "black"
+        comments: 
+            hypothesis: true
 ---
 
 1. The following code generate a long table:
 
 ```{r}
-#| code-fold: show
-
 stocks <- data.frame(year   = c(2015, 2015, 2016, 2016),
                      half   = c(   1,    2,    1,    2),
                      return = c(1.88, 0.59, 0.92, 0.17))
@@ -33,15 +32,12 @@ and convert it back to a tidy dataset.
 ```{r}
 #| message: false
 #| warning: false
-#| code-fold: show
 
 library(tidyverse)
 ```
 
 
 ```{r}
-#| code-fold: show
-
 stocks_wide <- stocks |> 
     pivot_wider(names_from = "half", values_from = "return") |>
     print()
@@ -56,15 +52,12 @@ stocks_tidy <- stocks_wide |>
 
 ```{r}
 #| eval: FALSE
-#| code-fold: show
 
 table4a %>% 
   pivot_longer(c(1999, 2000), names_to = "year", values_to = "cases")
 ```
 
 ```{r}
-#| code-fold: show
-
 tidy4a <- table4a |> 
     pivot_longer(c("1999", "2000"), names_to ="year", values_to = "cases") |> 
     print()
@@ -74,8 +67,6 @@ tidy4a <- table4a |>
 3. What would happen if you widden this table? Why?
 
 ```{R}
-#| code-fold: show
-
 people <- tribble(
   ~name,             ~names,  ~values,
   "Phillip Woods",   "age",       45,
@@ -88,8 +79,6 @@ people <- tribble(
 ```
 
 ```{r}
-#| code-fold: show
-
 # Redundant value exits
 people_wide <- people[-3,] |> 
     pivot_wider(names_from = names, values_from = values) |> 
@@ -99,8 +88,6 @@ people_wide <- people[-3,] |>
 4. Tidy the simple tibble below. Do you need to make it wider or longer? What are the variables?
 
 ```{r}
-#| code-fold: show
-
 preg <- tribble(
   ~pregnant, ~male, ~female,
   "yes",     NA,    10,
@@ -110,8 +97,6 @@ preg <- tribble(
 ```
 
 ```{r}
-#| code-fold: show
-
 preg_longer <- preg |> 
     pivot_longer(c("male", "female"), names_to = "gender", values_to = "count") |> 
     print()
@@ -120,7 +105,6 @@ preg_longer <- preg |>
 5. The `nycflights13::flights` data frame contains all 336,776 flights that departed from New York City in 2013. Based on this dataset, answer the following questions:
 
 ```{r}
-#| code-fold: show
 #| warning: false
 
 library(nycflights13)
@@ -130,8 +114,6 @@ library(nycflights13)
 a) Which plane (`tailnum`) has the worst on-time record?
 
 ```{r}
-#| code-fold: show
-
 flights <- nycflights13::flights
 
 worst_plane <- flights |> 
@@ -145,8 +127,6 @@ head(worst_plane, 5)
 b) What time of day should you fly if you want to avoid delays as much as possible?
 
 ```{r}
-#| code-fold: show
-
 best_time <- flights |> 
     group_by(sched_dep_time) |> 
     summarise(time = mean(arr_delay, na.rm = TRUE)) |> 
@@ -158,8 +138,6 @@ head(best_time, 5)
 c) For each destination, compute the total minutes of delay. For each flight, compute the proportion of the total delay for this destination.
 
 ```{r}
-#| code-fold: show
-
 delay_flights <- flights |> 
     filter(arr_delay > 0)
 
@@ -168,9 +146,9 @@ delay_dest <- delay_flights |>
     summarise(total_arr_delay = sum(arr_delay, na.rm = TRUE))
 head(delay_dest, 5)
 
-delay_prop_flight <- delay_flights %>%
-    left_join(., delay_dest, by = "dest") %>%
-    mutate(delay_prop = arr_delay / total_arr_delay) %>%
+delay_prop_flight <- delay_flights |> 
+    left_join(delay_dest, by = "dest") |> 
+    mutate(delay_prop = arr_delay / total_arr_delay) |> 
     select(dest, flight, delay_prop)
 head(delay_prop_flight, 5)
 ```
@@ -178,7 +156,6 @@ head(delay_prop_flight, 5)
 d) Find all destinations that are flown by at least two carriers. Use that information to rank the carriers.
 
 ```{r}
-#| code-fold: show
 #| message: false
 
 carrier_rank <- flights |> 
@@ -186,8 +163,8 @@ carrier_rank <- flights |>
     filter(n_distinct(carrier) >= 2) |>
     distinct(carrier) |> 
     group_by(carrier) |> 
-  summarise(Freq = n_distinct(dest)) |> 
-  arrange(desc(Freq))
+	summarise(Freq = n_distinct(dest)) |> 
+	arrange(desc(Freq))
 
 head(carrier_rank, 5)
 ```
@@ -195,17 +172,12 @@ head(carrier_rank, 5)
 e) For each plane, count the number of flights in each month.
 
 ```{r}
-#| code-fold: show
 #| message: false
 
-month_flights <- flights |> 
+month_flights <- flights |>
     group_by(tailnum, month) |> 
     summarise(num_flight = n_distinct(flight)) |> 
     arrange(tailnum)
 
 head(month_flights, 12)
 ```
-
-
-
-
