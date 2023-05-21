@@ -1,0 +1,87 @@
+---
+title: "W14 Exercise - Cluster Analysis"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        comments: 
+            hypothesis: true
+---
+
+
+# `mtcars` dataset
+
+Carry out clustering analysis on the `mtcars` dataset.
+
+## Kmeans
+
+```{r}
+#| message: false
+
+# Standardization & PCA
+dtf <- prcomp(mtcars, center=TRUE, scale.=TRUE)$x |> 
+    as.matrix()
+
+
+library(factoextra)
+fviz_nbclust(dtf, kmeans, method="wss")
+
+# Set k = 4. Clustering
+kc <- kmeans(dtf, 4)
+
+# Visualization
+par(mfrow=c(1, 2))
+plot(dtf[, 1:2],
+     col=kc$cluster)
+points(kc$centers,
+       col=1:4,
+       pch=16,
+       cex=2)
+```
+
+## Hierarchical cluster analysis (HCA)
+
+```{r}
+library(forecast)
+dtf.transformed <- BoxCox(dtf, lambda="auto")
+head(dtf.transformed)
+
+# Calculate the distance matrix
+distM <- dist(as.matrix(dtf.transformed), method="euclidean")
+# default using "euclidean" for distance measure if not choose methods. Euclidean is a good choice when using low-dimensional data, but usually, it need to normalize the data before.
+
+#Perform HCA (AGNES)
+hc <- hclust(distM, method = "complete")
+# default using "complete"(-linkage) as linkage method if not choose methods
+# Draw the dendrogram(Because the cluster solutions grow tree-like)
+plot(hc)
+
+# Change the distance measure to "canberra"
+distC <- dist(as.matrix(dtf.transformed), method = "canberra")
+hc2 <- hclust(distC, method = "complete")
+plot(hc2)
+
+# Use agglomerative coefficients (AC or AGNES) and divisive coefficient (DC, for DIANA)
+# to compare the strength of the hierarchical clustering structures. The stronger
+# of the clustering structure, the higher the coefficient (close to 1).
+library(cluster)
+coef.hclust(hc)
+coef.hclust(hc2)
+# As "euclidean" has a higher AC, it is stronger.
+
+# Perform AGNES
+dtfHcD <- agnes(dtf.transformed, metric = "euclidean", method = "average")# The default setting
+# Cut the AGNES tree at cluster number(k) = 4
+hclusterD <- cutree(dtfHcD, k = 4)
+# Extract divisive coefficient
+dtfHcD$dc
+
+# Change the linkage method can affect the clustering result
+dtfHcS <- agnes(dtf.transformed, method="single")
+hclusterS <- cutree(dtfHcS, k = 4)
+dtfHcS$ac
+```
+
+

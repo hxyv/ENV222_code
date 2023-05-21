@@ -1,0 +1,142 @@
+---
+title: "W14 Exercise - PCA"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        comments: 
+            hypothesis: true
+---
+
+# `wine` dataset
+
+The dataset "wine" from the R package `ggbiplot` gives the chemical consistuents of wines from three different cultivars grown in the same region in Italy. The chemical constituents includes alcohol, malic acid, ash, alcalinity of ash, magnesium, total phenols, flavanoids, nonflavanoid phenols, proanthocyanins, color intensity, hue, OD280/OD315 of diluted wines, and proline.
+
+```{r}
+# dvetools::install_github("vqv/ggbiplot")
+data(wine, package = "ggbiplot")
+```
+
+Carry out a PCA on the wine data.
+
+## Basic
+
+### Data preparation
+
+```{r}
+head(wine)
+
+# Standardization
+dtf <- as.matrix(scale(wine[, 1:13]))
+head(dtf)
+```
+
+### Correlation coefficeint (covariance) matrix
+
+```{r}
+rm1 <- cor(dtf)
+head(rm1)
+```
+
+### Eigenvalues and eigenvectors
+
+```{r}
+rs1 <- eigen(rm1)
+head(rs1)
+# Extract the eigenvalue in the result, that is, the variance of each principal component
+val <- rs1$values
+head(val)
+# Convert to standard deviation
+Standard_deviation <- sqrt(val)
+head(Standard_deviation)
+# Calculate variance contribution rate and cumulative contribution rate
+Proportion_of_Variance <- val / sum(val)
+head(Proportion_of_Variance)
+Cumulative_Proportion <- cumsum(Proportion_of_Variance)
+head(Cumulative_Proportion)
+
+# Draw scree plot
+#par(mar=c(6, 6, 6, 6))
+plot(
+    Proportion_of_Variance,
+    type="b",
+    cex=2,
+    cex.lab=2,
+    cex.axis=2,
+    lty=2,
+    lwd=2,
+    xlab="principal component number",
+    ylab="principal component variance",
+    xaxt="n",
+    yaxt="n"
+)
+axis(1, at=seq(0, 13, by=1))
+axis(2, at=seq(0, 0.5, by=0.1), las=1)
+```
+
+### Principal component score
+
+```{r}
+# Feature vectors in extraction results
+U <- as.matrix(rs1$vectors)
+# Perform matrix multiplication to obtain PC score
+PC <- dtf %*% U
+colnames(PC) <- c("PC1", "PC2","PC3", "PC4", "PC5", "PC6", "PC7", "PC8", "PC9", "PC10", "PC11", "PC12", "PC13")
+head(PC)
+```
+
+### Draw the main component dispersion point diagram
+
+```{r}
+# Convert to data frame
+PC <- data.frame(PC, wine.class)
+
+library(ggplot2)
+# Extract the variance contribution rate of the principal component and generate the coordinate axis title
+xlab <- paste0("PC1(", round(Proportion_of_Variance[1] * 100, 2), "%)")
+ylab <- paste0("PC2(", round(Proportion_of_Variance[2] * 100, 2), "%)")
+# Draw a scatter plot and add a confidence ellipse
+p <- ggplot(data=PC, aes(x=PC1, y=PC2, color=wine.class)) +
+    stat_ellipse(
+        aes(fill=wine.class),
+        type="norm",
+        geom="polygon",
+        alpha=0.2,
+        color=NA
+    ) +
+    geom_point() +
+    labs(x=xlab, y=ylab, color="") +
+    guides(fill=F)
+p
+```
+
+## One step
+
+```{r}
+com <- prcomp(wine, center=TRUE, scale.=TRUE)
+summary(com)
+# Obtain PC score
+dtf1 <- com$x
+head(dtf1)
+# Convert to data frame
+dtf1 <- data.frame(dtf1, wine.class)
+head(dtf1)
+# Visualize the analysis results
+xlab <- paste0("PC1(", round(Proportion_of_Variance[1] * 100, 2), "%)")
+ylab <- paste0("PC2(", round(Proportion_of_Variance[2] * 100, 2), "%)")
+# Draw a scatter plot and add a confidence ellipse
+p <- ggplot(data=PC, aes(x=PC1, y=PC2, color=wine.class)) +
+    stat_ellipse(
+        aes(fill=wine.class),
+        type="norm",
+        geom="polygon",
+        alpha=0.2,
+        color=NA
+    ) +
+    geom_point() +
+    labs(x=xlab, y=ylab, color="") +
+    guides(fill=F)
+p
+```
