@@ -5,7 +5,7 @@ highlight-style: pygments
 format: 
     html:
         code-fold: true
-        theme: yeti
+        theme: default
         embed-resources: true
 crossref: 
     fig-title: '**Figure**'
@@ -110,14 +110,3 @@ mtext("", side=4, outer=TRUE, line=-4)
 5. Insert the graph you created in Exercise 3 into a R markdown document. Give proper numbering and a caption. Cross-refer it in the statement.
 
 Here is the figure @fig-aerosol_particle.
-
-
-
-
-
-
-
-
-
-
-

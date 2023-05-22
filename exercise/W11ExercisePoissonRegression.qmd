@@ -1,0 +1,63 @@
+---
+title: "W11 Exercise - Poisson Regression"
+author: "Xingyu Hu"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+As scientist studies the effect of seizure drugs on the number of seizures during the first eight weeks of treatment. The dataset is available in the **robust** package:
+
+```{r}
+data("breslow.dat", package = "robust")
+```
+
+Carry out a Poisson regression of the number of seizures after treatment (`sumY`) as the dependent variable, and the treatment conditions (`Trt`), `Age`, and the number of seizures before treatment (`Base`) as the independent variable.
+
+```{r}
+View(breslow.dat)
+
+fit.breslow <- glm(sumY ~ Trt + Age + Base, 
+                   data = breslow.dat, 
+                   family = poisson())
+summary(fit.breslow)
+exp(coef(fit.breslow))
+stargazer::stargazer(fit.breslow, type = 'text')
+
+fit.breslow.od <-
+  glm(sumY ~ Trt + Age + Base,
+      data = breslow.dat,
+      family = quasipoisson())
+
+summary(fit.breslow.od)
+```
+
+```{r}
+#| warning: false
+
+fit.breslow.dat <- glm(sumY ~ Base+Age+Trt, data=breslow.dat, family=poisson())
+summary(fit.breslow.dat)
+
+fit.breslow.dat.reduced <- glm(sumY ~ Base+Age+Trt, data=breslow.dat, family=poisson())
+summary(fit.breslow.dat.reduced)
+
+exp(coef(fit.breslow.dat.reduced))
+
+equatiomatic::extract_eq(fit.breslow.dat.reduced, use_coefs = TRUE)
+stargazer::stargazer(fit.breslow.dat.reduced, type = 'text')
+
+library(qcc)
+qcc.overdispersion.test(breslow.dat$sumY, type = "poisson")
+
+fit.breslow.dat.reduced.od <- glm(sumY ~ Base+Age+Trt, data=breslow.dat, family = quasipoisson())
+summary(fit.breslow.dat.reduced.od)
+```
+
+

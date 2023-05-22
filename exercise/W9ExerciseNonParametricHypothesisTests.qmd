@@ -1,0 +1,53 @@
+---
+title: "W9 Exercise - Non-parametric Hypothesis Tests"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+# Trichloroethylene
+
+Trichloroethylene (TCE) is reported by the EPA to be the most prevalent solvent contaiminating groundwater at superfund sites in the United States. Exposure can result in effects to the immune and reproductive systems, liver, kidneys, central nervous system, and many affect fetal development during pregnancy. Long term exposures to TCE can increase the risk of kidney cancer. There is also evidence that TCE exposure can increase the risk for non-Hodgkin's lymphoma and liver cancer.
+
+The "tce" dataset shows the TCE concentrations (mg/L) at 10 randomly selected groundwater monitoring wells before remediation and the same wells after remediation. Download the tce.csv file. Is the median TCE concentration different after the remediation from before? Carry out a nonparametric test.
+
+```{r}
+tce <- read.csv("../data/tce.csv")
+
+wilcox.test(tce$TCE.mg.per.L[tce$Period == "Before"],
+            tce$TCE.mg.per.L[tce$Period == "After"],
+            paired = TRUE, conf.int = TRUE,
+            correct = FALSE)
+
+wilcox.test(tce$TCE.mg.per.L ~ tce$Period, 
+            paired = TRUE, conf.int = TRUE, 
+            correct = FALSE)
+
+wilcox.test(TCE.mg.per.L ~ Period, data = tce, 
+            paired = TRUE, conf.int = TRUE, 
+            correct = FALSE)
+```
+
+---
+
+# `iris`
+
+The iris dataset. Are the median sepal lengths equal among the three species? Carry out a nonparametic test.
+
+```{r}
+kruskal.test(Sepal.Length ~ Species, data = iris)
+boxplot(Sepal.Length ~ Species, 
+        data = iris, 
+        horizontal = TRUE, 
+        notch = TRUE, las = 1)
+```
+

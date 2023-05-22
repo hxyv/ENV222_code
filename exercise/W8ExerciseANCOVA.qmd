@@ -1,0 +1,145 @@
+---
+title: "W8 Exercise - ANCOVA"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+The effect of a drug on the birth weight of baby mice was studied. Pregnant mice were divided into four groups, and each group was treated with different does (0, 5, 50 or 500). The gestation and the birth weight of baby mice were recorded. The dataset is available as *litter* in the *multcomp* package.
+
+```{r}
+#| warning: false
+#| message: false
+
+library(multcomp)
+drug <- multcomp::litter
+```
+
+Does the drug does have effect on the weight?
+
+# ANOVA
+
+Carry out ANOVA with the drug `does` as the independent variable and `weight` as the dependent variable. What is your conclusion?
+
+## Hypotheses and question:
+
+- $H_0$: $\mu_1=\mu_2=\mu_3=\mu_4$
+- $H_1$: at least one mean is different from others
+- Reject $H_0$?
+
+## One step ANOVA
+
+```{r}
+drug_aov <- aov(weight ~ dose, data = drug)
+summary(drug_aov)
+```
+
+**Conclusion**: The drug dose not have effect on the weight.
+
+# ANCOVA
+
+Carry out ANCOVA with the drug dose as the independent variable, weight as the dependent variable, and gestation as the covariate. What is your conclusion?
+
+- Dependent variable: weight (continuous)
+- Independent variable: drug dose (categorical), gestation (continuous)
+
+```{r}
+#| message: false
+
+library(ggplot2)
+ggplot(drug, aes(gesttime, weight)) +
+    geom_point() +
+    geom_smooth(method = "lm") +
+    geom_point(aes(color = dose)) +
+    geom_smooth(aes(color = dose), method = "lm")
+```
+
+1. The gestation time of mice is different.
+2. The mice treated with higher dose gains lower weight.
+3. The regression lines have different slopes and intercepts.
+
+Three possible factors:
+
+1. Gestation time (intercept)
+2. Drug dose (intercept)
+3. Interaction between gestation time and drug dose (slope)
+
+## Maximal model
+
+```{r}
+#   The maximal model
+drug_ancova <- lm(weight ~ dose * gesttime, data = drug)
+summary(drug_ancova)
+
+# The ANOVA table for the maximal model
+anova(drug_ancova)
+
+# Other method to see the ANOVA table
+drug_aov <- aov(weight ~ dose * gesttime, data = drug)
+summary(drug_aov)
+summary.aov(drug_ancova)
+```
+
+## Minimal model
+
+```{r}
+# Delete the interaction factor
+drug_ancova2 <- update(drug_ancova, ~ . - dose:gesttime)
+summary(drug_ancova2)
+
+# Compare the simplified model with the maximal model
+anova(drug_ancova, drug_ancova2)
+```
+
+- The two models have no significant difference at $\alpha = 0.05$
+- The model simplification was justified
+
+```{r}
+# Delete the dose factor
+drug_ancova3 <- update(drug_ancova2, ~ . - dose)
+summary(drug_ancova3)
+
+# Compare the two models
+anova(drug_ancova2, drug_ancova3)
+```
+
+- Removing the *dose* factor causes a significant change to the model
+- The effect of drug dose on mice weight gain is highly significant and needs to be retained in the model
+- `drug_ancova2` is the minimal adequate model
+
+## One step
+
+```{r}
+step(drug_ancova)
+```
+
+## Results
+
+```{r}
+#| warning: false
+#| message: false
+
+library(equatiomatic)
+equatiomatic::extract_eq(drug_ancova2, use_coefs = TRUE)
+
+library(stargazer)
+stargazer::stargazer(drug_ancova2, type = "text")
+```
+
+
+
+
+
+
+
+
+

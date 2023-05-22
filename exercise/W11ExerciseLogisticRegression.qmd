@@ -1,0 +1,88 @@
+---
+title: "W11 Exercise - Logistic Regression"
+author: "Xingyu Hu"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+# `iris` dataset
+
+According to the petal width of an iris flower, can we guess what species it is, if we know it belongs to either versicolor or virginica? Carry out a binary logistic regression model using the iris dataset.
+
+```{r}
+data("iris")
+library(ggplot2)
+iris1 <- iris[iris$Species %in% c('versicolor', 'virginica'), c('Species', 'Petal.Width')]
+iris1$SpeciesLevel <- as.integer(iris1$Species) - 2 # 0: virginica. 1:versicolor
+ggplot(iris1) +
+  geom_point(aes(Petal.Width, SpeciesLevel), alpha = 0.2, size = 6)
+
+#iris1 <- filter(iris, Species != "setosa")
+lg_iris <- glm(SpeciesLevel ~ Petal.Width, data = iris1, family = binomial) 
+summary(lg_iris)
+
+pscl::pR2(lg_iris)["McFadden"]
+
+caret::varImp(lg_iris)
+
+equatiomatic::extract_eq(lg_iris, use_coefs = TRUE)
+stargazer::stargazer(lg_iris, type = 'text')
+
+ggplot(iris1, aes(x=Petal.Width, y=SpeciesLevel)) + 
+  geom_point() +
+  geom_smooth(formula = y ~ x, method="glm", method.args = list(family=binomial)) +
+  labs(x = 'Petal Width (cm)', y = 'Species and p')
+```
+
+
+# `glass` dataset
+
+Given a dataset called “glass.data”, build a multinomial model, using the features of the glass for predicting the glass type. The detailed information of this dataset is available in “glass.names”.
+
+```{r}
+ga <- read.csv('../data/glass.data',header = 0)
+names(ga)<-c("ID","RI","Na","Mg","Al","Si","K","Ca","Ba","Fe","Type")
+ga <- ga[, c("RI","Na","Mg","Al","Si","K","Ca","Ba","Fe","Type")]
+set.seed(123)
+train.sub <- sample(nrow(ga), round(0.8 * nrow(ga)))
+train.data <- ga[train.sub, ]
+test.data <- ga[-train.sub, ] 
+library(nnet)
+model <- multinom(Type ~ RI+Na+Mg+Al+Si+K+Ca+Ba+Fe, data = train.data)
+summary(model)
+test.data[1, ]
+test.data$predicted <- predict(model, newdata = test.data)
+mean(test.data$predicted == test.data$Type)
+table(test.data$Type, test.data$predicted)
+
+z_score <- summary(model)$coefficients/summary(model)$standard.errors
+p <- pnorm(abs(z_score), lower.tail = FALSE) * 2
+summary(model)$coefficient - qnorm(0.975) *  summary(model)$standard.errors
+summary(model)$coefficient + qnorm(0.975) *  summary(model)$standard.errors
+confint(model)
+
+model2 <- step(model)
+summary(model2)
+z_score <- summary(model2)$coefficients/summary(model2)$standard.errors
+p <- pnorm(abs(z_score), lower.tail = FALSE) * 2
+
+glasswor <- train.data[, 1:9]
+faraway::vif(glasswor)
+glasswor2 <- glasswor[, c("RI","Fe")]
+faraway::vif(glasswor2)
+model3 <- multinom(Type ~ RI + Fe, data = train.data)
+summary(model3)
+z_score <- summary(model3)$coefficients/summary(model3)$standard.errors
+p <- pnorm(abs(z_score), lower.tail = FALSE) * 2
+
+stargazer::stargazer(model3, type = 'text')
+```
+

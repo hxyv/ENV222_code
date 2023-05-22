@@ -1,0 +1,124 @@
+---
+title: "W12 Exercise - Non-linear Regression"
+author: "Xingyu Hu"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+# `jaws` dataset
+
+The dataset “jaws.txt” shows a non-linear relationship of the deer’s jaw size against the deer’s age. What non-linear model(s) could describe it? Carry out a non-linear regression analysis.
+
+```{r}
+#| warning: false
+
+library(tidyverse)
+
+dtf <- read.table("../data/jaws.txt", header = T)
+ggplot(dtf) + 
+    geom_point(aes(age, bone))
+```
+
+## Fit the model
+
+```{r}
+# Michaelis-Menten model
+m1 <- nls(bone ~ a * age / (b + age), 
+          data = dtf,
+          start = list(a = 125, b = 9)) |> print()
+summary(m1)
+
+# Automatic starting values
+dtf2 <- dtf[-1,]
+m2 <- nls(bone ~ SSmicmen(age, a, b), data = dtf2)
+summary(m2)
+
+# 3-parameter asymptotic exponential model
+m3 <- nls(bone ~ SSasympOff(age, a, b, c), data = dtf) |> print()
+summary(m3)
+
+xv <- seq(0, 50, 1)
+y1 <- predict(m1, list(age = xv))
+y2 <- predict(m3, list(age = xv))
+dtf_predicted <- data.frame(xv, y1, y2)
+ggplot(dtf) +
+    geom_point(aes(age, bone)) +
+    geom_line(aes(xv, y1), data = dtf_predicted, color = "#00BFC4") +
+    geom_line(aes(xv, y2), data = dtf_predicted, color = "#F8766D")
+```
+
+## Partial coefficient of determination
+
+```{r}
+calc_R2 <- function(model) {
+  ms <- summary(model)
+  sse <- as.vector((ms[[3]])^2 * ms$df[2])
+  null <- lm(dtf$bone ~ 1)
+  sst <- as.vector(unlist(summary.aov(null)[[1]][2]))
+  1 - sse/sst
+}
+
+calc_R2(m1)
+calc_R2(m3)
+```
+
+
+
+---
+
+# `Puromycin` dataset
+
+The dataset “Puromycin” shows the reaction velocity versus substrate concentration in an enzymatic reaction involving untreated cells or cells treated with Puromycin. Perform a non-linear regression analysis for the relationship of the reaction rate against the substrate concentration for the untreated and treated cells separately.
+
+```{r}
+dtf_treated <- Puromycin |> 
+    filter(state == "treated")
+
+dtf_untreated <- Puromycin |> 
+    filter(state == "untreated")
+
+ggplot(Puromycin) +
+    geom_point(aes(conc, rate, colour = factor(state)))
+```
+
+## Fit the models
+
+```{r}
+# Michaelis-Menten model
+m1 <- nls(rate ~ a * conc / (b + conc), 
+          data = dtf_treated,
+          start = list(a = 200, b = 0.05)) |> print()
+summary(m1)
+
+m2 <- nls(rate ~ a * conc / (b + conc),
+          data = dtf_untreated,
+          start = list(a = 150, b = 0.02)) |> print()
+summary(m2)
+
+xv <- seq(0, 1.2, 0.01)
+y1 <- predict(m1, list(conc = xv))
+y2 <- predict(m2, list(conc = xv))
+dtf_predicted <- data.frame(xv, y1, y2)
+
+ggplot(Puromycin) +
+    geom_point(aes(conc, rate, colour = factor(state))) +
+    geom_line(aes(xv, y1), data = dtf_predicted, color = "#F8766D") +
+    geom_line(aes(xv, y2), data = dtf_predicted, color = "#00BFC4")
+```
+
+## Partial coefficient of determination
+
+```{r}
+calc_R2(m1)
+calc_R2(m2)
+```
+
+

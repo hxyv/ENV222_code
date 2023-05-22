@@ -181,5 +181,3 @@ for(i in 1:25){
     print(paste0(encrypteIt(text, i), " (+", i, ")"))
 }
 ```
-    
-

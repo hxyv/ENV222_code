@@ -4,7 +4,7 @@ author: "Xingyu Hu"
 date: "`r Sys.Date()`"
 format: 
     html:
-        theme: sketchy
+        theme: default
         embed-resources: true
         code-block-bg: true
         code-block-border-left: "black"

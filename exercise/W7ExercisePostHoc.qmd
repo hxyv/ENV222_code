@@ -4,7 +4,7 @@ author: "Xingyu Hu"
 date: "`r Sys.Date()`"
 format: 
     html:
-        theme: sketchy
+        theme: default
         embed-resources: true
         code-block-bg: true
         code-block-border-left: "black"
@@ -92,6 +92,12 @@ species_pt <- pairwise.t.test(dtf$Sepal.Length,
                               var.equal = TRUE, 
                               p.adj = "bonf") |> print()
 
+species_pt <- pairwise.t.test(dtf$Sepal.Length, 
+                              dtf$Species, 
+                              pool.sd = FALSE, 
+                              var.equal = TRUE, 
+                              p.adj = "none") |> print()
+
 species_pt$p.value < 0.05
 ```
 
@@ -118,7 +124,7 @@ dtf <- data.frame(
     HTC = c(38, 40, 32, 36, 40, 40, 38, 40, 38, 40, 36, 40, 40, 
             35, 45, 56, 60, 50, 50, 50, 35, 40, 40, 55, 35,40, 
             42, 38, 46, 36), 
-    group = rep(c("control", "dushu", "jinji"), c(15, 10, 5))
+    group = c(rep("control", 15), rep("dushu", 10), rep("jinji", 5))
     )
 levels(dtf$group) <- c("control", "dushu", "jinji")
 
@@ -180,6 +186,12 @@ group_pt <- pairwise.t.test(dtf$HTC,
                             pool.sd = FALSE,
                             var.equal = TRUE,
                             p.adj = "bonf") |> print()
+
+group_pt2 <- pairwise.t.test(dtf$HTC,
+                            dtf$group,
+                            pool.sd = FALSE,
+                            var.equal = TRUE,
+                            p.adj = "none") |> print()
 
 group_pt$p.value < 0.01
 ```

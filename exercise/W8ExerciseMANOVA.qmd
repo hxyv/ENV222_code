@@ -1,0 +1,82 @@
+---
+title: "W8 Exercise - MANOVA"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+# `iris` dataset
+Do the species have influence on the petal size? Carry out MANOVA with the post-hoc test and give your conclusion.
+
+```{r}
+#| warning: false
+#| message: false
+
+library(ggplot2)
+library(tidyr)
+iris[, c("Petal.Length", "Petal.Width", "Species")] |> 
+    pivot_longer(cols = c(Petal.Length, Petal.Width)) |> 
+    ggplot() +
+    geom_boxplot(aes(Species, value, fill = name), outlier.size = 0.8) +
+    labs(y = "Size (cm)", fill = " ")
+
+library(gplots)
+par(mfrow = c(1, 2))
+plotmeans(iris$Petal.Length ~ iris$Species)
+plotmeans(iris$Petal.Width ~ iris$Species)
+```
+## Hypothesis
+
+- $H_0$: The population means of petal length and the petal width are not different across the species.
+    
+## Collect data
+
+```{r}
+# multivariate normality test
+PetalSize <- cbind(iris$Petal.Length, iris$Sepal.Width)
+```
+
+## Calculate the test statistic: the Pillai's Trace test or the F-test
+
+```{r}
+iris_manova <- manova(PetalSize ~ iris$Species)
+summary(iris_manova)
+summary(iris_manova, test = "Pillai")
+summary(iris_manova, test = "Wilks")
+summary(iris_manova, test = "Roy")
+summary(iris_manova, test = "Hotelling-Lawley")
+```
+
+Univariate ANOVAs for each dependent variable:
+
+```{r}
+summary.aov(iris_manova)
+```
+
+**Conclusion:** The species has a statistically significant effect on the petal width and petal length.
+
+## Post-hoc test
+
+**Linear Discriminant Analysis (LDA)**
+
+```{r}
+library(MASS)
+iris_lda <- lda(iris$Species ~ PetalSize, CV = FALSE) |> print()
+
+plot_lda <- data.frame(Species = iris$Species,
+                       lda = predict(iris_lda)$x)
+
+ggplot(plot_lda) +
+    geom_point(aes(x = lda.LD1, y = lda.LD2, colour = Species))
+```
+
+**Conclusion:** The petal size of the setosa species is different from other species.
