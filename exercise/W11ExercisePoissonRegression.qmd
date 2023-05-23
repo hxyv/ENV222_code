@@ -22,8 +22,6 @@ data("breslow.dat", package = "robust")
 Carry out a Poisson regression of the number of seizures after treatment (`sumY`) as the dependent variable, and the treatment conditions (`Trt`), `Age`, and the number of seizures before treatment (`Base`) as the independent variable.
 
 ```{r}
-View(breslow.dat)
-
 fit.breslow <- glm(sumY ~ Trt + Age + Base, 
                    data = breslow.dat, 
                    family = poisson())

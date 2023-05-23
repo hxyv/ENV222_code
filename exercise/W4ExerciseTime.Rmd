@@ -160,7 +160,7 @@ mean_temp <- ggplot(mean_dtf) +
 3. The Smart Flux data set The smartflux.zip data set was obtained from the flux observation at the Outdoor Research and Teaching Station (ORTS), XJTLU. It was supposed to be an automatic continuous measurement at a half-hourly base, saved in daily files. However, there were missing data in the records for some reason. How many data files are missing? How many records are missing?
 
 ```{r warning=FALSE}
-setwd("data/smartflux/")
+setwd("../data/smartflux/")
 temp <- list.files() %>% 
     substr(start = 1, stop =10) %>%
     strptime(format = "%Y-%m-%d") %>%
@@ -175,8 +175,9 @@ for(i in 1:(length(temp)-1)){
 }
 print(missing_files)
 ```
+
 ```{r warning=FALSE}
-setwd("data/smartflux/")
+setwd("../data/smartflux/")
 temp <- list.files()
 files <- lapply(temp, function(i){
     read.table(i, fill = TRUE)

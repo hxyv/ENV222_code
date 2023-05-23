@@ -1,0 +1,17 @@
+par(mfrow = c(2, 3))
+plot(airquality$Solar.R, airquality$Ozone)
+hist(airquality$Solar.R)
+barplot(airquality$Month)
+plot(airquality$Solar.R, airquality$Ozone)
+hist(airquality$Solar.R)
+barplot(airquality$Month)
+
+mymat <- matrix(1:6, nrow = 2)
+layout(mymat)
+plot(airquality$Solar.R, airquality$Ozone)
+hist(airquality$Solar.R)
+barplot(airquality$Month)
+plot(airquality$Solar.R, airquality$Ozone)
+hist(airquality$Solar.R)
+barplot(airquality$Month)
+

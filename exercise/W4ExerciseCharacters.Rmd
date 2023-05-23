@@ -16,8 +16,7 @@ library(dplyr)
 library(tidyr)
 library(DescTools)
 
-setwd("D:/Documents/RProj/ENV222_codes")
-student_names <- read.csv("data/student_names.csv")
+student_names <- read.csv("../data/student_names.csv")
 ```
 
 

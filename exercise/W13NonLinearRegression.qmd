@@ -6,6 +6,8 @@ format:
     html:
         theme: default
         embed-resources: true
+        toc: true
+        toc-location: left
         comments: 
             hypothesis: true
 ---
