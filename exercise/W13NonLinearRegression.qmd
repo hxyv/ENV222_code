@@ -1,16 +1,13 @@
 ---
-title: "W12 Exercise - Non-linear Regression"
+title: "W13 Exercise - Non-linear Regression"
 author: "Xingyu Hu"
+date: "`r Sys.Date()`"
 format: 
     html:
         theme: default
         embed-resources: true
-        code-block-bg: true
         comments: 
             hypothesis: true
-        toc: true
-        toc-location: left
-        number-sections: true
 ---
 
 # `jaws` dataset
@@ -120,5 +117,7 @@ ggplot(Puromycin) +
 calc_R2(m1)
 calc_R2(m2)
 ```
+
+
 
 
