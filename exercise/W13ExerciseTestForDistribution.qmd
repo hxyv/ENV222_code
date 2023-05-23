@@ -1,0 +1,124 @@
+---
+title: "W13 Exercise - Tests for Distribution"
+author: "Xingyu Hu"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+# `state.x77` dataset
+
+Based on the data set `state.x77`, dose the murder rate follow a normal distribution?
+
+```{r}
+#| message: false
+
+library(dplyr)
+
+data(state)
+x0 <- state.x77[, 5] |> print()
+x0_mean <- mean(x0) |> print()
+x0_sd <- sd(x0) |> print()
+eCDF <- ecdf(x0) |> print()
+
+# Cumulative distribution function F(x) of the reference of distribution
+CDF <- pnorm(x0, x0_mean, x0_sd)
+
+# Create a data frame to put values into
+dtf <- data.frame(data=x0,
+                  eCDF=eCDF(x0),
+                  CDF=CDF)
+
+# Visualization
+library(ggplot2)
+ggplot(dtf, aes(data)) +
+  stat_ecdf(size=1,aes(colour = "Empirical CDF (Fn(x))")) +
+  stat_function(fun = pnorm, args = list(x0_mean, x0_sd), aes(colour = "Theoretical CDF (F(x))")) +
+  xlab("Sample data") +
+  ylab("Cumulative probability") +
+  scale_y_continuous(breaks=seq(0, 1, by = 0.2))+
+  theme(legend.title=element_blank())
+
+# Sort values of sample observations and remove duplicates
+x <- unique(sort(x0)) |> print()
+
+# Calculate D
+Daft <- abs(eCDF(x) - pnorm(x, x0_mean, x0_sd)) |> print()
+Dbef <- abs(c(0, eCDF(x)[-length(x)]) - pnorm(x, x0_mean, x0_sd)) |> print()
+D_score <- max(c(Daft, Dbef)) |> print()
+
+# One step in R:
+ks.test(x0, "pnorm", x0_mean, x0_sd)
+```
+
+- **Decision:** We can not reject $H_0$ that the data are normally distributed at $\alpha=0.05$.
+- **Conclusion:** The data follows a normal distribution.
+
+---
+
+# `iris`
+
+Based on the iris dataset, dose the sepal width of versicolor follow the same probability distribution as virginica?
+
+```{r}
+library(ggplot2)
+ggplot(iris) +
+    geom_boxplot(aes(y=Sepal.Width, x=Species))
+
+
+sample1 <- iris |> 
+    filter(Species == "versicolor") |> 
+    select(Sepal.Width) |> 
+    unlist() |> 
+    as.numeric()
+
+sample2 <- iris |> 
+    filter(Species == "virginica") |> 
+    select(Sepal.Width) |> 
+    unlist() |> 
+    as.numeric()
+
+mean1 <- mean(sample1)
+mean2 <- mean(sample2)
+sd1 <- sd(sample1)
+sd2 <- sd(sample2)
+
+# Empricial distribution function Fn(x)
+eCDF1 <- ecdf(sample1)
+eCDF1(sample1)
+
+# Empricial distribution function Fm(x)
+eCDF2 <- ecdf(sample2)
+eCDF2(sample2)
+
+# Visualization
+group2 <- c(rep("sample1", length(sample1)), rep("sample2", length(sample2)))
+df2 <- data.frame(all = c(sample1,sample2), group = group2)
+ggplot(df2, aes(x = all, group = group, color = group2)) +
+  stat_ecdf(size=1) +
+  xlab("Sample data") +
+  ylab("Cumulative probability") +
+  theme(legend.title=element_blank())
+
+# Merge, sort observation of two samples, and remove duplicates
+x2 <- unique(sort(c(sample1, sample2)))
+
+# Calculate D and its location
+D2 <- max(abs(eCDF(x2) - eCDF(x2)))
+idxD2 <- which.max(abs(eCDF1(x2) - eCDF2(x2))) # the index of x-axis value
+xD2 <- x2[idxD2] # Corresponding x-axis value
+
+# One step in R:
+ks.test(sample1, sample2)
+```
+
+- **Decision:** Reject $H_0$ at $\alpha=0.05$.
+- **Conclusion:** Sample1 and sample2 come from different distribution.
+
