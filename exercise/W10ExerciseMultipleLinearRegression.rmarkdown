@@ -1,0 +1,177 @@
+---
+title: "W10 Exercise - Multiple Linear Regression"
+author: "Xingyu Hu"
+date: "`r Sys.Date()`"
+format: 
+    html:
+        theme: default
+        embed-resources: true
+        code-block-bg: true
+        comments: 
+            hypothesis: true
+        toc: true
+        toc-location: left
+        number-sections: true
+---
+
+
+# `airquality` dataset
+
+The airquality dataset. Build a multiple linear regression model for predicting the ozone concentration (the dependent variable) with the solar radiation, wind speed, temperature, and month (the independent variables).
+
+- DV: Ozone concentration
+- IV: Solar radiation, wind speed, temperature, month
+
+## Fit the model
+
+
+```{r}
+library(tidyr)
+dtf <- airquality |> drop_na()
+
+dtf_lm <- lm(Ozone ~ Solar.R + Wind + Temp + Month, data  = dtf)
+summary(dtf_lm)
+
+confint(dtf_lm)
+
+anova(dtf_lm)
+```
+
+
+- The intercept terms, Solar.R, wind, Temp are significant variables to explain the ozone concentration. The 95% confidence intervals also confirm it.
+- The intercept terms month is not a significant variable to explain the ozone centration at 95% confidence intervals, which should be removed.
+- The model is significant: $p < 0.05$, adjusted $R^2=0.6055$
+
+## Diagnose the model
+
+### Multicollinearity
+
+#### Variance inflation factor (VIF)
+
+
+```{r}
+# All the VIFs
+ozonewor <- dtf[, c(-1, -5)]
+faraway::vif(ozonewor)
+
+# Update the model:
+dtf_lm2 <- lm(Ozone ~ Solar.R + Wind + Temp, data  = dtf)
+summary(dtf_lm2)
+```
+
+
+- All VIFs < 10. No multicollinearity.
+- The four explanatory varaibles account for 60.6% of the variability in the ozone concentration 
+
+### Simplifiy the model
+
+####  Backward selection
+
+
+```{r}
+get_p <- function(model){
+    smry2 <- data.frame(summary(model)$coefficients)
+    smry2[order(-smry2$Pr...t..),]
+}
+get_p(dtf_lm2)
+summary(dtf_lm2)
+```
+
+
+### AIC selection
+
+
+```{r}
+dtf_aic <- step(dtf_lm, direction = "both")
+summary(dtf_aic)
+```
+
+
+## Results
+
+
+```{r}
+#| warning: false
+
+equatiomatic::extract_eq(dtf_lm2, use_coefs = TRUE)
+stargazer::stargazer(dtf_lm2, type = "text")
+```
+
+
+---
+
+# `heart` dataset
+
+A scientist studies the social factors that influence heart disease. She surveys 500 towns and gather data on the percentage of people in each town who smoke, the percentage of people in each town who bike to work, and the percentage of people in each town who have heart disease. The data set is available as heart.data.csv. Perform multiple linear regression analysis.
+
+- DV: heart disease
+- IV: biking and smoking
+
+## Fit the model
+
+
+```{r}
+library(dplyr)
+dtf <- read.csv("../data/heart.data.csv") |> 
+    drop_na() |> 
+    select(-1)
+
+dtf_lm <- lm(heart.disease ~ biking + smoking, data = dtf)
+summary(dtf_lm)
+confint(dtf_lm)
+anova(dtf_lm)
+```
+
+
+- The intercept terms, biking and smoking are significant varaibles to explain the heart disease. The 95% confidence intervals also confirm it.
+- The model is significant: $p<0.05$, adjusted $R^2=0.9795$.
+
+## Diagnose the model
+
+### Multicollinearity
+
+#### Variance inflation factor (VIF)
+
+
+```{r}
+# All the VIFs
+heartwor <- dtf[, -3]
+faraway::vif(heartwor)
+```
+
+
+- Both VIFs < 10. No multicollinearity.
+- The two explanatory varaibles account for 97.96% of the varability in the heart concentration.
+
+### Simplify the model
+
+#### Backward selection
+
+
+```{r}
+get_p <- function(model){
+    smry2 <- data.frame(summary(model)$coefficients)
+    smry2[order(-smry2$Pr...t..),]
+}
+get_p(dtf_lm)
+```
+
+#### AIC selectoin
+
+
+```{r}
+dtf_aic <- step(dtf_lm, direction = "both")
+summary(dtf_aic)
+```
+
+
+## Results
+
+
+```{r}
+#| warning: false
+
+equatiomatic::extract_eq(dtf_lm, use_coefs = TRUE)
+stargazer::stargazer(dtf_lm, type = "text")
+```
+

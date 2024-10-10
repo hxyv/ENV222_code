@@ -36,3 +36,24 @@ p2 <- ggplot(data = pc_score, aes(x=PC1, y=PC2, color=iris.Species)) +
 p2 + scale_fill_manual(values=c("pink", "orange", "purple")) +
     scale_colour_manual(values=c("pink", "orange", "purple"))
 print(p2)
+
+
+
+dtf <- data.frame(conc = c(13.31, 13.67, 12.805, 13.1, 13.39, 12.375, 11.58, 14.58, 12.029, 13.69, 14.14, 12.54, 15.63, 13.66, 15.51, 13.23, 13.25, 15.2, 14.18, 14.53), 
+                  city = c(rep("A", 10), rep("B", 10)))
+
+dtf[duplicated(dtf$conc),]
+
+m <- sum(dtf$city == "A")
+n <- sum(dtf$city == "B")
+x <- dtf$conc[dtf$city == "A"]
+y <- dtf$conc[dtf$city == "B"]
+U1 <- sum(outer(x, y, ">")) + sum(outer(x, y, "==")) * 0.5
+U2 <- sum(outer(y, x, ">")) + sum(outer(y, x, "==")) * 0.5
+
+Upper = 77
+Lower = 23
+curve(dwilcox(x, m, n), 0, to = 100, ylab = 'Probability distribution density', las = 1, type = 's')
+abline(h = 0)
+segments(x0 = c(23, 24, 76), y0 = 0, x1 = c(23, 24, 76), y1 = dwilcox(c(23, 24, 76), m, n), col = c('blue', 'red', 'red'))
+legend('topright', legend = c('Distribution curve', 'Critical values', 'U score'), col = c('black', 'red', 'blue'), lty = 1)
